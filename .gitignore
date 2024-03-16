@@ -52,7 +52,10 @@ Mkfile.old
 dkms.conf
 
 #build artifacts
-build/
+build*/
 
 #scratch code
 scribbles/
+
+#old files
+*.old

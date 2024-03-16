@@ -1,6 +1,13 @@
 #pragma once
 
-//TODO: symbol name switch macro
+/*TODO:
+ * - symbol name switch macro
+ * - use debug compiler define
+ * - add utilities for discovering tests
+ * - benchmark support
+ * - test report formats (JSON, HTML)
+ * - benchmark report formats (JSON, HTML)
+ */
 
 #include <stddef.h>
 #include <stdbool.h>

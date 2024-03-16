@@ -10,8 +10,9 @@ static void test__example(test_t test, void * ctx) {
  (void)ctx;
  for (size_t i = 0; i < 100; i++) {
   printf("%zu\n", i);
-  test_expect_true(false);
+  test_expect_true(true);
  }
+ test_ok(&test);
 }
 
 TEST_SUITE() {
