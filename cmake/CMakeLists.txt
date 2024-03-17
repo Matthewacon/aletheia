@@ -13,12 +13,13 @@ if("${PROJECT_SOURCE_DIR}" STREQUAL "${PROJECT_BINARY_DIR}")
 endif()
 
 #[[ensure compiler is supported]]
-#TODO: msvc, ClangCL Intel icc, Intel dpc, tinycc, IBM XL C, qcc
+#TODO: msvc, ClangCL, Intel icc, Intel dpc, IBM XL C, qcc
 list(
  APPEND "${VARIABLE_PREFIX}_SUPPORTED_COMPILER_IDS"
   Clang
   AppleClang
   GNU
+  TinyCC
 )
 #set compiler shorthand identifier so we can easily check later
 if(
@@ -28,6 +29,8 @@ if(
  set("${VARIABLE_PREFIX}_COMPILER_ID" "Clang")
 elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
  set("${VARIABLE_PREFIX}_COMPILER_ID" "GNU")
+elseif(CMAKE_C_COMPILER_ID STREQUAL "TinyCC")
+ set("${VARIABLE_PREFIX}_COMPILER_ID" "TinyCC")
 else()
  message(
   FATAL_ERROR
@@ -143,6 +146,8 @@ if("${${VARIABLE_PREFIX}_COMPILER_ID}" STREQUAL "Clang")
  add_subdirectory(clang)
 elseif("${${VARIABLE_PREFIX}_COMPILER_ID}" STREQUAL "GNU")
  add_subdirectory(gcc)
+elseif("${${VARIABLE_PREFIX}_COMPILER_ID}" STREQUAL "TinyCC")
+ add_subdirectory(tcc)
 else()
  #reminder to update when we add support for a new compiler
  message(

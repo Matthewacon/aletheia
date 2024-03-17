@@ -146,7 +146,7 @@ function("${FUNCTION_PREFIX}add_sanitizer_flags" sanitizer_flag_var)
   )
  endif()
 
- #add debug/non-debug flags
+ #add sanitizer/non-sanitizer flags
  set(compiler_flags_var "${VARIABLE_PREFIX}_COMPILER_FLAGS")
  set(linker_flags_var "${VARIABLE_PREFIX}_LINKER_FLAGS")
  if(${${sanitizer_flag_var}})
@@ -166,6 +166,7 @@ function("${FUNCTION_PREFIX}add_sanitizer_flags" sanitizer_flag_var)
   message(STATUS "${PROJECT_NAME}: Sanitizer flags disabled")
  endif()
 
+ #propagate compiler and linker flags to global scope
  set(
   "${compiler_flags_var}"
   "${${compiler_flags_var}}"
@@ -207,7 +208,6 @@ function("${FUNCTION_PREFIX}add_test_flags" test_flag_var)
 
  #add test/non-test flags
  set(compiler_flags_var "${VARIABLE_PREFIX}_COMPILER_FLAGS")
- set(linker_flags_var "${VARIABLE_PREFIX}_LINKER_FLAGS")
  if(${${test_flag_var}})
   message(STATUS "${PROJECT_NAME}: Tests enabled")
   set("${VARIABLE_PREFIX}_TESTS_ENABLED" TRUE PARENT_SCOPE)
@@ -221,15 +221,10 @@ function("${FUNCTION_PREFIX}add_test_flags" test_flag_var)
   set("${VARIABLE_PREFIX}_TESTS_ENABLED" FALSE PARENT_SCOPE)
  endif()
 
- #propagate compiler and linker flags to global scope
+ #propagate compiler flags to global scope
  set(
   "${compiler_flags_var}"
   "${${compiler_flags_var}}"
-  PARENT_SCOPE
- )
- set(
-  "${linker_flags_var}"
-  "${${linker_flags_var}}"
   PARENT_SCOPE
  )
 endfunction()
@@ -572,7 +567,7 @@ function("${FUNCTION_PREFIX}add_coverage_targets")
  )
  add_dependencies(clean-coverage "${target_name_prefix}-clean-gcov-profile-data")
 
- #skip adding test if tests are not enabled for this build
+ #skip adding coverage targets if tests are not enabled for this build
  if(
   NOT DEFINED "${VARIABLE_PREFIX}_TESTS_ENABLED"
   OR NOT ${${VARIABLE_PREFIX}_TESTS_ENABLED}
@@ -692,13 +687,4 @@ function("${FUNCTION_PREFIX}add_coverage_targets")
 
  #add gcovr report as a dependency of the coverage target
  add_dependencies(coverage "${target_name_prefix}-gcovr")
-endfunction()
-
-#[[
- adds any late-stage flags/properties/whatever to targets, that couldn't have
- been set up earlier. Should be at the end of your main `CMakeLists.txt`
-
- usage: finalize_targets()
-]]
-function("${FUNCTION_PREFIX}finalize_targets")
 endfunction()

@@ -135,6 +135,3 @@ set_target_properties(
   #generate compile commands json for aletheia targets
   EXPORT_COMPILE_COMMANDS TRUE
 )
-
-#[[finalize flags/properties/whatever on all targets]]
-aletheia_finalize_targets()
