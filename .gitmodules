@@ -1,0 +1,3 @@
+[submodule "dependencies/cakemake"]
+	path = dependencies/cakemake
+	url = https://github.com/Matthewacon/cakemake.git

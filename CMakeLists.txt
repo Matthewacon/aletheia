@@ -4,15 +4,8 @@ cmake_minimum_required(VERSION 3.25)
  TODO:
  - [ ] add `aletheia_add_test_executable` function for convenience in defining
    and discovering tests when using aletheia as a library
- - [x] separate out gcc, clang and msvc support out to separate files
- - [x] set up coverage report and numbers for llvm-cov and gcov
- - [ ] set up test report target
- - [ ] ci
- - [ ] set up benchmark targets
- - [ ] SAST targets
- - [ ] clang-format target
- - [ ] break apart cmake build system to separate repo (name TBD)
- - [ ] packaging: AUR, vcpkg, conan, build2
+ - [ ] ci (w/ gha-tool)
+ - [ ] add benchmark support to aletheia
 ]]
 
 project(
@@ -26,29 +19,20 @@ project(
 set(CMAKE_VERBOSE_MAKEFILE TRUE)
 
 #[[setup project base]]
-add_subdirectory(cmake)
+include("${CMAKE_CURRENT_LIST_DIR}/dependencies/cakemake/CMakeLists.txt")
 
 #[[compile options]]
-set(ALETHEIA_DEBUG FALSE CACHE BOOL "Enable debug flags for alethia")
-set(ALETHEIA_SANITIZERS FALSE CACHE BOOL "Enable sanitizers for aletheia")
-set(ALETHEIA_TESTS FALSE CACHE BOOL "Enable validation test suite")
+set(ALETHEIA_DEBUG FALSE CACHE BOOL "Enable flags for debug builds")
+set(ALETHEIA_MUSL_LIBC FALSE CACHE BOOL "Enable flags for linking against musl libc")
+set(ALETHEIA_SANITIZERS FALSE CACHE BOOL "Enable flags for building with sanitizers")
+set(ALETHEIA_TESTS FALSE CACHE BOOL "Enable flags for building tests")
 
 #[[add all compiler and linker flags to global lists]]
 aletheia_add_default_flags()
-message(STATUS "COMPILER FLAGS: ${ALETHEIA_COMPILER_FLAGS}")
-message(STATUS "LINKER FLAGS: ${ALETHEIA_LINKER_FLAGS}")
-
 aletheia_add_debug_flags(ALETHEIA_DEBUG)
-message(STATUS "COMPILER FLAGS: ${ALETHEIA_COMPILER_FLAGS}")
-message(STATUS "LINKER FLAGS: ${ALETHEIA_LINKER_FLAGS}")
-
 aletheia_add_sanitizer_flags(ALETHEIA_SANITIZERS)
-message(STATUS "COMPILER FLAGS: ${ALETHEIA_COMPILER_FLAGS}")
-message(STATUS "LINKER FLAGS: ${ALETHEIA_LINKER_FLAGS}")
-
+aletheia_add_musl_libc_flags(ALETHEIA_MUSL_LIBC)
 aletheia_add_test_flags(ALETHEIA_TESTS)
-message(STATUS "COMPILER FLAGS: ${ALETHEIA_COMPILER_FLAGS}")
-message(STATUS "LINKER FLAGS: ${ALETHEIA_LINKER_FLAGS}")
 
 #[[configure library targets]]
 #find sources
@@ -61,14 +45,16 @@ file(
 )
 
 #shared target
-function(define_aletheia_shared_target name_prefix dst_prefix)
+function(define_aletheia_shared_library name_prefix dst_prefix)
  set(name "${name_prefix}aletheia")
 
  add_library("${name}" SHARED EXCLUDE_FROM_ALL)
  target_sources("${name}" PRIVATE ${ALETHEIA_SOURCES})
  target_include_directories("${name}" PUBLIC include)
  target_compile_options("${name}" PRIVATE ${ALETHEIA_COMPILER_FLAGS})
+ target_compile_options("${name}" PUBLIC ${ALETHEIA_PUBLIC_COMPILER_FLAGS})
  target_link_options("${name}" PRIVATE ${ALETHEIA_LINKER_FLAGS})
+ target_link_options("${name}" PUBLIC ${ALETHEIA_PUBLIC_LINKER_FLAGS})
 
  set(
   "${dst_prefix}_NAME"
@@ -76,17 +62,19 @@ function(define_aletheia_shared_target name_prefix dst_prefix)
   PARENT_SCOPE
  )
 endfunction()
-aletheia_add_source_project(define_aletheia_shared_target)
+aletheia_add_source_project(define_aletheia_shared_library)
 
 #static target
-function(define_aletheia_static_target name_prefix dst_prefix)
+function(define_aletheia_static_library name_prefix dst_prefix)
  set(name "${name_prefix}aletheia-static")
 
  add_library("${name}" STATIC EXCLUDE_FROM_ALL)
  target_sources("${name}" PRIVATE ${ALETHEIA_SOURCES})
  target_include_directories("${name}" PUBLIC include)
  target_compile_options("${name}" PRIVATE ${ALETHEIA_COMPILER_FLAGS})
+ target_compile_options("${name}" PUBLIC ${ALETHEIA_PUBLIC_COMPILER_FLAGS})
  target_link_options("${name}" PRIVATE ${ALETHEIA_LINKER_FLAGS})
+ target_link_options("${name}" PUBLIC ${ALETHEIA_PUBLIC_LINKER_FLAGS})
  set_target_properties(
   "${name}"
   PROPERTIES
@@ -99,19 +87,15 @@ function(define_aletheia_static_target name_prefix dst_prefix)
   PARENT_SCOPE
  )
 endfunction()
-aletheia_add_source_project(define_aletheia_static_target)
+aletheia_add_source_project(define_aletheia_static_library)
 
 #[[configure tests]]
-enable_testing()
 aletheia_add_test_project(
  NAME unit
  SOURCE_DIRECTORY "${PROJECT_SOURCE_DIR}/test/unit"
- #INSTRUMENTED_DEPENDENCIES define_aletheia_static_target
- INSTRUMENTED_DEPENDENCIES define_aletheia_shared_target
+ INSTRUMENTED_DEPENDENCIES define_aletheia_shared_library
 )
 
-#TODO: debug, remove
-message(STATUS "targets: ${ALETHEIA_TARGETS}")
 foreach(target IN LISTS ALETHEIA_TARGETS)
  get_target_property(
   sources
